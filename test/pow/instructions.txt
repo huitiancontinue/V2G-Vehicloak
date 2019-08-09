@@ -1,0 +1,93 @@
+rm -rf signer1/data/geth signer1/data/SN signer2/data/geth signer2/data/SN signer3/data/geth signer3/data/SN signer4/data/geth signer4/data/SN 
+
+rm -rf signer1/data/geth signer1/data/SN signer2/data/geth signer2/data/SN
+
+==================================================================
+
+geth --datadir signer1/data account new
+
+clear
+
+geth --datadir signer1/data init pow.json
+
+geth --datadir signer1/data --networkid 55661 --port 2007 --unlock 9f879f25c4cedf13eb648268a137b5f1ad62334f --password signer1/passwd.txt console
+
+===================================================================
+
+geth --datadir signer2/data account new
+
+clear
+
+geth --datadir signer2/data init pow.json
+
+geth --datadir signer2/data --networkid 55661 --port 2008 --unlock e2f8be446faa0fb5583b0c996949666dcd19bac8 --password signer2/passwd.txt console
+
+
+contract:
+Mycon=eth.contract(abi)
+Mycon.new({from:eth.accounts[0],data:bin,gas:1000000,gasprice:"0x1"})
+
+A:
+eth.sendMintTransaction({from:eth.accounts[0],value:"0x10000"})
+eth.sendConvertTransaction({from:eth.accounts[0],value:"0x2000"})
+eth.sendCommitTransaction({from:eth.accounts[0],value:"0x2000",to:addr,txHash:"0x602cfd0d6925378c1e8299604ffa3e4c816db0182be547ab643401122ecc18d5",h0:hashchain[0],N:"0x2000"})
+
+eth.sendRefundTransaction({from:eth.accounts[0],value:"0x1000",to:addr})
+eth.sendDepositsgTransaction({from:eth.accounts[0],to:addr,txHash:"0x2ed3b5a3270ed6d8d4fe430c5f4efa9eefb7d18754030073d9ce8165b95ec5a8"})
+
+B:
+eth.sendClaimTransaction({from:eth.accounts[0],value:"0x1000",to:addr,hi:"0xf5581488a09708e1087f3876a993a6e27ffcab0a9c8557755d7f715d98ce50fe"})
+eth.sendDepositsgTransaction({from:eth.accounts[0],to:addr,txHash:"0x24de019769af1c24768b1da9f2a1b073ce0ab0387eb8c344cf79142125f663fb"})
+===================================================================
+======================================================================================================
+
+
+
+
+abi=[{"constant":false,"inputs":[{"name":"hi","type":"bytes32"},{"name":"valuesb","type":"uint256"},{"name":"cmts_b","type":"bytes32"},{"name":"addressa","type":"address"}],"name":"Claim","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"name":"h0","type":"bytes32"},{"name":"amount","type":"uint256"},{"name":"n","type":"uint256"}],"name":"Commit","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"ev","outputs":[{"name":"cmts_A","type":"bytes32"},{"name":"cmts_B","type":"bytes32"},{"name":"addressa","type":"address"},{"name":"amounts","type":"uint256"},{"name":"N","type":"uint256"},{"name":"H0","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]
+
+bin="0x608060405234801561001057600080fd5b506105d0806100206000396000f300608060405260043610610057576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680633e52507a1461005c57806357c42059146100b8578063cf61bde8146100f0575b600080fd5b6100b66004803603810190808035600019169060200190929190803590602001909291908035600019169060200190929190803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506101ae565b005b6100ee600480360381019080803560001916906020019092919080359060200190929190803590602001909291905050506103ed565b005b3480156100fc57600080fd5b50610131600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610548565b60405180876000191660001916815260200186600019166000191681526020018573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018481526020018381526020018260001916600019168152602001965050505050505060405180910390f35b600080600080879250600091505b60c88210156102b7576000808673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060050154600019168360001916141561021e578193506102b7565b826040516020018082600019166000191681526020019150506040516020818303038152906040526040518082805190602001908083835b60208310151561027b5780518252602082019150602081019050602083039250610256565b6001836020036101000a0380198251168184511680821785525050505050509050019150506040518091039020925081806001019250506101bc565b6000808673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060040154846000808873ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600301540281151561034657fe5b049050868114156103e357856000808773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060010181600019169055508473ffffffffffffffffffffffffffffffffffffffff166108fc829081150290604051600060405180830381858888f193505050501580156103e1573d6000803e3d6000fd5b505b5050505050505050565b336000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060020160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550816000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060030181905550806000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060040181905550826000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000206005018160001916905550505050565b60006020528060005260406000206000915090508060000154908060010154908060020160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff169080600301549080600401549080600501549050865600a165627a7a723058205e3ec100554db8b3675ca4f2c5b5aaceebb275285d967a4bafe837801847e64d0029"
+
+
+
+arr = eth.accounts.slice(15,2015)
+
+Mycon=eth.contract(abi)
+Mycon.new({from:eth.accounts[0],data:bin,gas:1000000,gasprice:"0x1"})
+
+addr1="0xA1fBeC4248e9e4c1aDB0B3f342aA2f05D560b913"
+addr2="0xE6aE90Dea27f744DE92c56b441FF36D8d670FAf9"
+
+
+
+
+
+bi-test:
+
+h=eth.sendMultiTransactions(1,{froms:arr})
+h=eth.sendMultiTransactions(21,{froms:arr,to:addr})
+h=eth.sendMultiTransactions(3,{froms:arr,to:addr,addrAs:arr})
+h=eth.sendMultiTransactions(4,{froms:arr,to:addr})
+h=eth.sendMultiTransactions(5,{froms:arr,N:"0x0"})
+
+eth.testBlock(h)
+
+
+
+uni-test:
+
+h=eth.sendMultiTransactions(22,{froms:arr,to:addr,value:"0x3e8"})
+h=eth.sendMultiTransactions(3,{froms:arr,to:addr,addrAs:arr})
+h=eth.sendMultiTransactions(5,{froms:arr,N:"0x0"})
+
+eth.testBlock(h)
+
+
+
+
+
+
+
+
+
+
