@@ -145,44 +145,13 @@ func GenCMT(value uint64, sn []byte, r []byte) *common.Hash {
 	return &reshash
 }
 
-//GenCMT生成CMT 调用c的sha256函数  （go的sha256函数与c有一些区别）
-// func GenCMTS(values uint64, pk *ecdsa.PublicKey, sns []byte, rs []byte, sna []byte) *common.Hash {
-
-// 	values_c := C.ulong(values)
-// 	PK := crypto.PubkeyToAddress(*pk) //--zy
-// 	pk_c := C.CString(common.ToHex(PK[:]))
-// 	sns_string := common.ToHex(sns[:])
-// 	sns_c := C.CString(sns_string)
-// 	defer C.free(unsafe.Pointer(sns_c))
-// 	rs_string := common.ToHex(rs[:])
-// 	rs_c := C.CString(rs_string)
-// 	defer C.free(unsafe.Pointer(rs_c))
-// 	sna_string := common.ToHex(sna[:])
-// 	sna_c := C.CString(sna_string)
-// 	defer C.free(unsafe.Pointer(sna_c))
-// 	//uint64_t value_s,char* pk_string,char* sn_s_string,char* r_s_string,char *sn_old_string
-// 	cmtA_c := C.genCMTS(values_c, pk_c, sns_c, rs_c, sna_c) //64长度16进制数
-// 	cmtA_go := C.GoString(cmtA_c)
-// 	//res := []byte(cmtA_go)
-// 	res, _ := hex.DecodeString(cmtA_go)
-// 	reshash := common.BytesToHash(res) //32长度byte数组
-// 	return &reshash
-// }
-
-func GenCMT_1(values uint64, sns []byte, rs []byte, sna []byte) *common.Hash {
+func GenCMT_1(values uint64, rs []byte) *common.Hash {
 
 	values_c := C.ulong(values)
-	sns_string := common.ToHex(sns[:])
-	sns_c := C.CString(sns_string)
-	defer C.free(unsafe.Pointer(sns_c))
 	rs_string := common.ToHex(rs[:])
 	rs_c := C.CString(rs_string)
 	defer C.free(unsafe.Pointer(rs_c))
-	sna_string := common.ToHex(sna[:])
-	sna_c := C.CString(sna_string)
-	defer C.free(unsafe.Pointer(sna_c))
-	//uint64_t value_s,char* sn_s_string,char* r_s_string,char *sn_old_string
-	cmtA_c := C.genCMT_1(values_c, sns_c, rs_c, sna_c) //64长度16进制数
+	cmtA_c := C.genCMT_1(values_c, rs_c) //64长度16进制数
 	cmtA_go := C.GoString(cmtA_c)
 	//res := []byte(cmtA_go)
 	res, _ := hex.DecodeString(cmtA_go)
@@ -190,7 +159,7 @@ func GenCMT_1(values uint64, sns []byte, rs []byte, sna []byte) *common.Hash {
 	return &reshash
 }
 
-//GenRT 返回merkel树的hash  --zy
+//GenRT 返回merkle树的hash  --zy
 func GenRT(CMTSForMerkle []*common.Hash) common.Hash {
 	var cmtArray string
 	for i := 0; i < len(CMTSForMerkle); i++ {
@@ -449,13 +418,14 @@ func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAo
 	return nil
 }
 
-func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, SNA *common.Hash, CMTS *common.Hash, RT []byte, CMTSForMerkle []*common.Hash) []byte {
-
+func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *common.Hash, RC *common.Hash, CMTC *common.Hash, RT []byte, CMTSForMerkle []*common.Hash) []byte {
+	
 	valueS := C.ulong(ValueS)
 	snS := C.CString(common.ToHex(SNS.Bytes()[:]))
 	rS := C.CString(common.ToHex(RS.Bytes()[:]))
-	snA := C.CString(common.ToHex(SNA.Bytes()[:]))
-	cmtS := C.CString(common.ToHex(CMTS[:]))
+	cmtS := C.CString(common.ToHex(CMTS.Bytes()[:]))
+	rC := C.CString(common.ToHex(RC.Bytes()[:]))
+	cmtC := C.CString(common.ToHex(CMTC.Bytes()[:]))
 	rt := C.CString(common.ToHex(RT))
 
 	var cmtArray string
@@ -465,12 +435,9 @@ func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, SNA *commo
 	}
 	cmtsM := C.CString(cmtArray)
 	nC := C.int(len(CMTSForMerkle))
-	t1 := time.Now()
-	cproof := C.genCommitproof(snS, rS, snA, valueS, cmtS, cmtsM, nC, rt)
-	t2 := time.Now()
-	genCommitproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genCommitproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genCommitproof_time = %v ", genCommitproof_time))
+	fmt.Println("invoke C interface ......")
+	cproof := C.genCommitproof(snS, rS, rC, valueS, cmtS, cmtC, cmtsM, nC, rt)
+
 	var goproof string
 	goproof = C.GoString(cproof)
 	return []byte(goproof)
@@ -478,16 +445,17 @@ func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, SNA *commo
 
 var InvalidCommitProof = errors.New("Verifying commit proof failed!!!")
 
-func VerifyCommitProof(ValueS uint64, SN_S *common.Hash, RT []byte, proof []byte) error {
+func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []byte) error {
 	cproof := C.CString(string(proof))
 	defer C.free(unsafe.Pointer(cproof))
-	valueS := C.ulong(ValueS)
+	cmtC := C.CString(common.ToHex(CMTC[:]))
+	defer C.free(unsafe.Pointer(cmtC))
 	snS := C.CString(common.ToHex(SN_S[:]))
 	defer C.free(unsafe.Pointer(snS))
 	rt := C.CString(common.ToHex(RT))
 	defer C.free(unsafe.Pointer(rt))
 	t1 := time.Now()
-	tf := C.verifyCommitproof(cproof, rt, snS, valueS)
+	tf := C.verifyCommitproof(cproof, rt, snS, cmtC)
 	t2 := time.Now()
 	verifyCommitproof_time := t2.Sub(t1)
 	log.Info("---------------------------------verifyCommitproof_time---------------------------------")

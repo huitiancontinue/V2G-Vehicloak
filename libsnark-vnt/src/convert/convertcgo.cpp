@@ -195,7 +195,7 @@ std::string string_proof_as_hex(libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_
 template <typename ppzksnark_ppT>
 r1cs_ppzksnark_proof<ppzksnark_ppT> generate_convert_proof(r1cs_ppzksnark_proving_key<ppzksnark_ppT> proving_key,
                                                         Note &note_old,
-                                                        NoteS &notes,
+                                                        Note &notes,
                                                         Note& note,
                                                         uint256 cmtA_old,
                                                         uint256 cmtS,
@@ -256,22 +256,6 @@ char *genCMT(uint64_t value, char *sn_string, char *r_string)
     return p;
 }
 
-//func GenCMT(value uint64, sn []byte, r []byte)
-char *genCMT_1(uint64_t value, char *sn_string, char *r_string, char *snA_string)
-{
-    uint256 sn = uint256S(sn_string);
-    uint256 r = uint256S(r_string);
-    uint256 snA = uint256S(snA_string);
-    NoteS note = NoteS(value, sn, r, snA);
-    uint256 cmtA = note.cm();
-    std::string cmtA_c = cmtA.ToString();
-    char *p = new char[65]; //必须使用new开辟空间 不然cgo调用该函数结束全为0
-    cmtA_c.copy(p, 64, 0);
-    *(p + 64) = '\0'; //手动加结束符
-
-    return p;
-}
-
 char *genConvertproof(uint64_t value_A,
                    char *sn_s_string,
                    char *r_s_string,
@@ -299,7 +283,7 @@ char *genConvertproof(uint64_t value_A,
 
     //计算sha256
     Note note_old = Note(value_A, sn, r);
-    NoteS notes = NoteS(value_s, sn_s, r_s, sn);
+    Note notes = Note(value_s, sn_s, r_s);
     Note note_new = Note(value_A_new, snAnew, rAnew);
 
     //初始化参数
