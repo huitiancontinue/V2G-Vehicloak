@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+
 	//"crypto/ecdsa"
 
 	"encoding/hex"
@@ -1708,20 +1709,20 @@ func (s *PublicTransactionPoolAPI) SendCommitTransaction(ctx context.Context, ar
 	}
 
 	h0 := zktx.H0
-	amount := big.NewInt(1000)
+	cmtC := zktx.CmtC
 	N := big.NewInt(1000)
 
 	//turn params to input of contract
-	func_name := "Commit(bytes32,uint256,uint256)"
+	func_name := "Commit(bytes32,bytes32,uint256)"
 	func_keccak256 := crypto.Keccak256([]byte(func_name))[:4]
 	h0_bytes := h0.Bytes()
-	amount_bytes := common.BigToHash(amount).Bytes()
+	cmtC_bytes := cmtC.Bytes()
 	N_bytes := common.BigToHash(N).Bytes()
 
 	var buffer bytes.Buffer
 	buffer.Write(func_keccak256)
 	buffer.Write(h0_bytes)
-	buffer.Write(amount_bytes)
+	buffer.Write(cmtC_bytes)
 	buffer.Write(N_bytes)
 
 	input := buffer.Bytes()
@@ -1746,8 +1747,7 @@ func (s *PublicTransactionPoolAPI) SendCommitTransaction(ctx context.Context, ar
 	tx.SetCmtarr(cmtarray)
 	tx.SetRTcmt(zktx.RT)
 	tx.SetZKSNS(&zktx.Sn_s)
-	tx.SetZKValue(uint64(1000))
-	tx.SetZKCMTS(&zktx.CmtS)
+	tx.SetZKCMT(&zktx.CmtC)
 	tx.SetZKProof(zktx.Commit_proof)
 	hash, err := submitTransaction(ctx, s.b, tx)
 	return hash, err
@@ -1767,21 +1767,21 @@ func (s *PublicTransactionPoolAPI) SendClaimTransaction(ctx context.Context, arg
 	}
 
 	hi := zktx.Hi
-	v := big.NewInt(50)
+	L := big.NewInt(50)
 
 	//turn params to input of contract
 	func_name := "Claim(bytes32,uint256,bytes32,address)"
 	func_keccak256 := crypto.Keccak256([]byte(func_name))[:4]
 	hi_bytes := hi.Bytes()
-	value_bytes := common.BigToHash(v).Bytes()
-	cmts_bytes := zktx.Cmtv.Bytes()
+	L_bytes := common.BigToHash(L).Bytes()
+	cmtv_bytes := zktx.Cmtv.Bytes()
 	addr_bytes := args.AddrA.Hash().Bytes()
 
 	var buffer bytes.Buffer
 	buffer.Write(func_keccak256)
 	buffer.Write(hi_bytes)
-	buffer.Write(value_bytes)
-	buffer.Write(cmts_bytes)
+	buffer.Write(L_bytes)
+	buffer.Write(cmtv_bytes)
 	buffer.Write(addr_bytes)
 
 	input := buffer.Bytes()
@@ -1795,6 +1795,7 @@ func (s *PublicTransactionPoolAPI) SendClaimTransaction(ctx context.Context, arg
 
 	tx.SetZKValue(uint64(50))
 	tx.SetZKCMTS(&zktx.Cmtv)
+	tx.SetZKCMT(&zktx.CmtC)
 	tx.SetZKProof(zktx.Claim_proof)
 	hash, err := submitTransaction(ctx, s.b, tx)
 	return hash, err
@@ -1813,17 +1814,17 @@ func (s *PublicTransactionPoolAPI) SendRefundTransaction(ctx context.Context, ar
 		return common.Hash{}, err
 	}
 
-	values := big.NewInt(950)
+	D := big.NewInt(950)
 
 	//turn params to input of contract
 	func_name := "Refund(uint256,bytes32)"
 	func_keccak256 := crypto.Keccak256([]byte(func_name))[:4]
-	value_bytes := common.BigToHash(values).Bytes()
+	D_bytes := common.BigToHash(D).Bytes()
 	cmts_bytes := zktx.Cmtr.Bytes()
 
 	var buffer bytes.Buffer
 	buffer.Write(func_keccak256)
-	buffer.Write(value_bytes)
+	buffer.Write(D_bytes)
 	buffer.Write(cmts_bytes)
 
 	input := buffer.Bytes()
@@ -1837,6 +1838,7 @@ func (s *PublicTransactionPoolAPI) SendRefundTransaction(ctx context.Context, ar
 
 	tx.SetZKValue(uint64(950))
 	tx.SetZKCMTS(&zktx.Cmtr)
+	tx.SetZKCMT(&zktx.CmtC)
 	tx.SetZKProof(zktx.Refund_proof)
 	hash, err := submitTransaction(ctx, s.b, tx)
 	return hash, err
@@ -1875,7 +1877,7 @@ func (s *PublicTransactionPoolAPI) SendDepositsgTransaction(ctx context.Context,
 		var cmtarray []common.Hash
 		for i := 0; i < 32; i++ {
 			if i == 9 {
-				cmtarray = append(cmtarray, zktx.Cmtv_B)
+				cmtarray = append(cmtarray, zktx.Cmtv)
 			} else {
 				cmt := common.HexToHash(zktx.Cmt_str[i])
 				cmtarray = append(cmtarray, cmt)
@@ -1883,7 +1885,7 @@ func (s *PublicTransactionPoolAPI) SendDepositsgTransaction(ctx context.Context,
 		}
 		tx.SetRTcmt(zktx.RT_1)
 		tx.SetCmtarr(cmtarray)
-		tx.SetZKSNS(&zktx.Sn_v_B)
+		tx.SetZKSNS(&zktx.Sn_v)
 		tx.SetZKSN(&zktx.Sn_old)
 		tx.SetZKCMTOLD(&zktx.CmtA_old)
 		tx.SetZKCMT(&zktx.CmtB_D)
@@ -1893,7 +1895,7 @@ func (s *PublicTransactionPoolAPI) SendDepositsgTransaction(ctx context.Context,
 		var cmtarray []common.Hash
 		for i := 0; i < 32; i++ {
 			if i == 9 {
-				cmtarray = append(cmtarray, zktx.CmtA_v)
+				cmtarray = append(cmtarray, zktx.Cmtr)
 			} else {
 				cmt := common.HexToHash(zktx.Cmt_str[i])
 				cmtarray = append(cmtarray, cmt)
@@ -1901,7 +1903,7 @@ func (s *PublicTransactionPoolAPI) SendDepositsgTransaction(ctx context.Context,
 		}
 		tx.SetRTcmt(zktx.RT_2)
 		tx.SetCmtarr(cmtarray)
-		tx.SetZKSNS(&zktx.Sn_A_v)
+		tx.SetZKSNS(&zktx.Sn_r)
 		tx.SetZKSN(&zktx.Sn_new)
 		tx.SetZKCMTOLD(&zktx.CmtA_new)
 		tx.SetZKCMT(&zktx.CmtA_D)

@@ -194,7 +194,7 @@ bool test_commit_gadget_with_instance(
         
         bool result = verify_proof(keypair.vk, 
                                     *proof, 
-                                    rt, //wrong_rt
+                                    rt, 
                                     sn_s,
                                     cmtC
                                    );

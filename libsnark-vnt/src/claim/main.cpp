@@ -109,6 +109,7 @@ bool test_claim_gadget_with_instance(
     uint256 r_s = uint256S("123");//random_uint256();
     Note notes = Note(value_s, sn_s, r_s);
     uint256 cmtS = notes.cm();
+    //uint256 cmtS_w = uint256S("345");
 
     uint256 r_c = uint256S("123");//random_uint256();
     NoteC notec = NoteC(value_c, r_c);

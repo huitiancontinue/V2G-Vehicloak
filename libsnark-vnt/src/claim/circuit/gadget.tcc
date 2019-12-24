@@ -61,8 +61,8 @@ public:
 
             alloc_uint256(zk_unpacked_inputs, cmtS);
             alloc_uint256(zk_unpacked_inputs, cmtC);
-            alloc_uint64(zk_packed_inputs, this->L);
-            alloc_uint64(zk_packed_inputs, this->N);
+            alloc_uint64(zk_unpacked_inputs, this->L);
+            alloc_uint64(zk_unpacked_inputs, this->N);
 
             assert(zk_unpacked_inputs.size() == verifying_input_bit_size()); // 判定输入长度
 
@@ -118,9 +118,8 @@ public:
     void generate_r1cs_constraints() { 
         // The true passed here ensures all the inputs are boolean constrained.
         unpacker->generate_r1cs_constraints(true);
-        cout<<"generate contract constraints..."<<endl;
+
         note->generate_r1cs_constraints();
-        cout<<"generate other constraints..."<<endl;
         // Constrain `ZERO`
         generate_r1cs_equals_const_constraint<FieldT>(this->pb, ZERO, FieldT::zero(), "ZERO");
         // TODO: These constraints may not be necessary if SHA256

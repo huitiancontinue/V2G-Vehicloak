@@ -115,19 +115,19 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		}
 	}
 	if tx.Code() == types.CommitTx {
-		err = zktx.VerifyCommitProof(tx.ZKValue(), tx.ZKSNS(), tx.RTcmt().Bytes(), tx.ZKProof()) //TBD
+		err = zktx.VerifyCommitProof(tx.ZKCMT(), tx.ZKSNS(), tx.RTcmt().Bytes(), tx.ZKProof()) //TBD
 		if err != nil {
 			return nil, 0, err
 		}
 	}
 	if tx.Code() == types.ClaimTx {
-		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKValue(), tx.ZKProof()) //TBD
+		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKCMT(), uint64(50), uint64(1000), tx.ZKProof()) //TBD
 		if err != nil {
 			return nil, 0, err
 		}
 	}
 	if tx.Code() == types.RefundTx {
-		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKValue(), tx.ZKProof()) //TBD
+		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKCMT(), uint64(950), uint64(1000), tx.ZKProof()) //TBD
 		if err != nil {
 			return nil, 0, err
 		}

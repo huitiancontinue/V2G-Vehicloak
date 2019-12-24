@@ -224,22 +224,22 @@ include_directories(
 #    ${DEPENDS_DIR}/libsnark/depends/libfqfft
 #  )
 ##############################
-add_executable(
-  main
+# add_executable(
+#   main
 
-  claim/main.cpp
-)
+#   claim/main.cpp
+# )
 
-target_link_libraries(
-  main
+# target_link_libraries(
+#   main
 
-  snark
-)
+#   snark
+# )
 
-target_include_directories(
-  main
+# target_include_directories(
+#   main
 
-  PUBLIC
-  ${DEPENDS_DIR}/libsnark
-  ${DEPENDS_DIR}/libsnark/depends/libfqfft
-)
+#   PUBLIC
+#   ${DEPENDS_DIR}/libsnark
+#   ${DEPENDS_DIR}/libsnark/depends/libfqfft
+# )

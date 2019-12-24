@@ -195,7 +195,12 @@ std::string string_proof_as_hex(libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_
 template <typename ppzksnark_ppT>
 r1cs_ppzksnark_proof<ppzksnark_ppT> generate_claim_proof(r1cs_ppzksnark_proving_key<ppzksnark_ppT> proving_key,
                                                         Note &notes,
-                                                        uint256 cmtS)
+                                                        NoteC &notec,
+                                                        uint256 cmtS,
+                                                        uint256 cmtC,
+                                                        uint64_t L,
+                                                        uint64_t N
+                                                        )
 {
     typedef Fr<ppzksnark_ppT> FieldT;
 
@@ -203,7 +208,7 @@ r1cs_ppzksnark_proof<ppzksnark_ppT> generate_claim_proof(r1cs_ppzksnark_proving_
     claim_gadget<FieldT> g(pb);     // 构造新模型
     g.generate_r1cs_constraints(); // 生成约束
 
-    g.generate_r1cs_witness( notes, cmtS); // 为新模型的参数生成证明
+    g.generate_r1cs_witness(notes, notec, cmtS, cmtC, L, N); // 为新模型的参数生成证明
 
     if (!pb.is_satisfied())
     { // 三元组R1CS是否满足  < A , X > * < B , X > = < C , X >
@@ -221,45 +226,60 @@ template <typename ppzksnark_ppT>
 bool verify_claim_proof(r1cs_ppzksnark_verification_key<ppzksnark_ppT> verification_key,
                   r1cs_ppzksnark_proof<ppzksnark_ppT> proof,
                   uint256 &cmtS,
-                  uint64_t value_s)
+                  uint256 &cmtC,
+                  uint64_t L,
+                  uint64_t N
+                  )
 {
     typedef Fr<ppzksnark_ppT> FieldT;
 
     const r1cs_primary_input<FieldT> input = claim_gadget<FieldT>::witness_map(
-        value_s,
-        cmtS);
+        cmtS,
+        cmtC,
+        L,
+        N
+        );
 
     // 调用libsnark库中验证proof的函数
     return r1cs_ppzksnark_verifier_strong_IC<ppzksnark_ppT>(verification_key, input, proof);
 }
 
 //func GenCMT(value uint64, sn []byte, r []byte)
-char *genCMT(uint64_t value, char *sn_string, char *r_string)
-{
-    uint256 sn = uint256S(sn_string);
-    uint256 r = uint256S(r_string);
-    Note note = Note(value, sn, r);
-    uint256 cmtA = note.cm();
-    std::string cmtA_c = cmtA.ToString();
-    char *p = new char[65]; //必须使用new开辟空间 不然cgo调用该函数结束全为0
-    cmtA_c.copy(p, 64, 0);
-    *(p + 64) = '\0'; //手动加结束符
+// char *genCMT(uint64_t value, char *sn_string, char *r_string)
+// {
+//     uint256 sn = uint256S(sn_string);
+//     uint256 r = uint256S(r_string);
+//     Note note = Note(value, sn, r);
+//     uint256 cmtA = note.cm();
+//     std::string cmtA_c = cmtA.ToString();
+//     char *p = new char[65]; //必须使用new开辟空间 不然cgo调用该函数结束全为0
+//     cmtA_c.copy(p, 64, 0);
+//     *(p + 64) = '\0'; //手动加结束符
 
-    return p;
-}
+//     return p;
+// }
 
-char *genClaimproof(char *sn_s_string,
-                   char *r_s_string,
-                   char *cmt_s_string,
-                   uint64_t value_s)
+char *genClaimproof(uint64_t value_s,
+                    char *sn_s_string,
+                    char *r_s_string,
+                    char *cmt_s_string,
+                    uint64_t value_c,
+                    char *r_c_string,
+                    char *cmt_c_string,
+                    uint64_t L,
+                    uint64_t N
+                    )
 {
     //从字符串转uint256
     uint256 sn_s = uint256S(sn_s_string);
     uint256 r_s = uint256S(r_s_string);
     uint256 cmtS = uint256S(cmt_s_string); 
+    uint256 r_c = uint256S(r_c_string);
+    uint256 cmtC = uint256S(cmt_c_string);
 
-    //计算sha256
+    //生成sha256输入
     Note notes = Note(value_s, sn_s, r_s);
+    NoteC notec = NoteC(value_c, r_c);
 
     //初始化参数
     alt_bn128_pp::init_public_params();
@@ -271,7 +291,15 @@ char *genClaimproof(char *sn_s_string,
     // 生成proof
     cout << "Trying to generate claim proof..." << endl;
 
-    libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_pp> proof = generate_claim_proof<alt_bn128_pp>(keypair.pk, notes, cmtS );
+    libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_pp> proof;
+    proof = generate_claim_proof<alt_bn128_pp>(keypair.pk,
+                                                notes,
+                                                notec,
+                                                cmtS,
+                                                cmtC,
+                                                L,
+                                                N
+                                                );
 
     //proof转字符串
     std::string proof_string = string_proof_as_hex(proof);
@@ -283,9 +311,15 @@ char *genClaimproof(char *sn_s_string,
     return p;
 }
 
-bool verifyClaimproof(char *data, char *cmtS_string , uint64_t value_s)
+bool verifyClaimproof(char *data, 
+                    char *cmtS_string, 
+                    char *cmtC_string, 
+                    uint64_t L, 
+                    uint64_t N
+                    )
 {
     uint256 cmtS = uint256S(cmtS_string);
+    uint256 cmtC = uint256S(cmtC_string);
 
     alt_bn128_pp::init_public_params();
     r1cs_ppzksnark_keypair<alt_bn128_pp> keypair;
@@ -396,7 +430,7 @@ bool verifyClaimproof(char *data, char *cmtS_string , uint64_t value_s)
     proof.g_K.X = k_x;
     proof.g_K.Y = k_y;
 
-    bool result = verify_claim_proof(keypair.vk, proof, cmtS , value_s);
+    bool result = verify_claim_proof(keypair.vk, proof, cmtS, cmtC, L, N);
 
     if (!result)
     {
