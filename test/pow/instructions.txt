@@ -14,7 +14,7 @@ geth --datadir signer1/data init pow.json
 
 启动控制台：
 
-geth --datadir signer1/data --networkid 55661 --port 2007 --unlock 8097f79887ff58904c313269bb27dca55b41d4ab --password signer1/passwd.txt console
+geth --datadir signer1/data --networkid 55661 --port 2007 --unlock 1d3fc7ede6112270e483e7414d00771903ebd3c7 --password signer1/passwd.txt console
 
 ====================================================================================================================
 部署合约

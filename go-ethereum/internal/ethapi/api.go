@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"sync"
 
 	//"crypto/ecdsa"
 
@@ -1497,6 +1498,7 @@ func (s *PublicTransactionPoolAPI) GetPubKeyRLP(ctx context.Context, address com
 
 //------------Blockchain performance test------------
 
+//本地检测出块时间
 func (s *PublicTransactionPoolAPI) TestBlockByHash(ctx context.Context, hash common.Hash) {
 
 	for true {
@@ -1509,14 +1511,46 @@ func (s *PublicTransactionPoolAPI) TestBlockByHash(ctx context.Context, hash com
 		}
 	}
 }
-
+//成组交易检测
 func (s *PublicTransactionPoolAPI) TestBlock(ctx context.Context, hashList []common.Hash) {
 	for i := 0; i < len(hashList); i++ {
 		go s.TestBlockByHash(ctx, hashList[i])
 	}
 }
 
-func (s *PublicTransactionPoolAPI) SendMultiTransactions(ctx context.Context, number int, args SendTxArgs) ([]common.Hash, error) {
+//获取出块时间
+func (s *PublicTransactionPoolAPI) GetProcessingTime(ctx context.Context, hash common.Hash, c_end chan int64, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for true {
+		receipt, _ := s.GetTransactionReceipt(ctx, hash)
+		if receipt != nil && receipt["blockNumber"] != nil {
+			t_end := time.Now().UnixNano()
+			c_end <- t_end
+			return
+		}
+	}
+}
+//成组获取共识时间
+func (s *PublicTransactionPoolAPI) GetProcessingTimeAll(ctx context.Context, hashList []common.Hash) ([]int64) {
+	t_start := time.Now().UnixNano()
+	endChan := make(chan int64, len(hashList))
+	wg := &sync.WaitGroup{}
+	for i := 0; i < len(hashList); i++ {
+		wg.Add(1)
+		go s.GetProcessingTime(ctx, hashList[i], endChan, wg)
+	}
+	wg.Wait()
+	close(endChan)
+
+	var resultList []int64
+	for r := range endChan{
+		resultList = append(resultList, (r-t_start)/1000000)
+	}
+	return resultList
+}
+
+func (s *PublicTransactionPoolAPI) SendMultiTransactions(ctx context.Context, number int, args SendTxArgs) ([]int64, error) {
 	var hashList []common.Hash
 	switch number {
 	case 1:
@@ -1602,7 +1636,8 @@ func (s *PublicTransactionPoolAPI) SendMultiTransactions(ctx context.Context, nu
 		}
 	}
 
-	return hashList, nil
+	timeList := s.GetProcessingTimeAll(ctx, hashList)
+	return timeList, nil
 }
 
 func (s *PublicTransactionPoolAPI) SendMintTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
