@@ -25,11 +25,9 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"runtime"
 	"sync"
-	"time"
 	"unsafe"
-
-	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/ethereum/go-ethereum/crypto/ecies"
 
@@ -285,6 +283,7 @@ func NewRandomPubKey(sA *big.Int, pkB ecdsa.PublicKey) *ecdsa.PublicKey {
 //V2G
 
 func GenMintProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RAnew *common.Hash, CMTold *common.Hash, SNold *common.Hash, CMTnew *common.Hash, ValueNew uint64) []byte {
+
 	value_c := C.ulong(ValueNew)     //转换后零知识余额对应的明文余额
 	value_old_c := C.ulong(ValueOld) //转换前零知识余额对应的明文余额
 
@@ -297,12 +296,8 @@ func GenMintProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RAne
 	cmtA_c := C.CString(common.ToHex(CMTnew[:]))
 
 	value_s_c := C.ulong(ValueNew - ValueOld) //需要被转换的明文余额
-	t1 := time.Now()
+
 	cproof := C.genMintproof(value_c, value_old_c, sn_old_c, r_old_c, sn_c, r_c, cmtA_old_c, cmtA_c, value_s_c)
-	t2 := time.Now()
-	genMintproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genMintproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genMintproof_time = %v ", genMintproof_time))
 
 	var goproof string
 	goproof = C.GoString(cproof)
@@ -311,18 +306,23 @@ func GenMintProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RAne
 
 var InvalidMintProof = errors.New("Verifying mint proof failed!!!")
 
-func VerifyMintProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) error {
+func VerifyMintProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	cproof := C.CString(string(proof))
 	cmtA_old_c := C.CString(common.ToHex(cmtold[:]))
 	cmtA_c := C.CString(common.ToHex(cmtnew[:]))
 	sn_old_c := C.CString(common.ToHex(snaold.Bytes()[:]))
 	value_s_c := C.ulong(value)
-	t1 := time.Now()
+
 	tf := C.verifyMintproof(cproof, cmtA_old_c, sn_old_c, cmtA_c, value_s_c)
-	t2 := time.Now()
-	veriftMintproof_time := t2.Sub(t1)
-	log.Info("---------------------------------veriftMintproof_time---------------------------------")
-	log.Info(fmt.Sprintf("veriftMintproof_time = %v ", veriftMintproof_time))
+
 	if tf == false {
 		return InvalidMintProof
 	}
@@ -330,6 +330,7 @@ func VerifyMintProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Ha
 }
 
 func GenRedeemProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RAnew *common.Hash, CMTold *common.Hash, SNold *common.Hash, CMTnew *common.Hash, ValueNew uint64) []byte {
+
 	value_c := C.ulong(ValueNew)     //转换后零知识余额对应的明文余额
 	value_old_c := C.ulong(ValueOld) //转换前零知识余额对应的明文余额
 
@@ -342,12 +343,8 @@ func GenRedeemProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RA
 	cmtA_c := C.CString(common.ToHex(CMTnew[:]))
 
 	value_s_c := C.ulong(ValueOld - ValueNew) //需要被转换的明文余额
-	t1 := time.Now()
+
 	cproof := C.genRedeemproof(value_c, value_old_c, sn_old_c, r_old_c, sn_c, r_c, cmtA_old_c, cmtA_c, value_s_c)
-	t2 := time.Now()
-	genRedeemproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genRedeemproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genRedeemproof_time = %v ", genRedeemproof_time))
 
 	var goproof string
 	goproof = C.GoString(cproof)
@@ -356,18 +353,23 @@ func GenRedeemProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RA
 
 var InvalidRedeemProof = errors.New("Verifying redeem proof failed!!!")
 
-func VerifyRedeemProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) error {
+func VerifyRedeemProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	cproof := C.CString(string(proof))
 	cmtA_old_c := C.CString(common.ToHex(cmtold[:]))
 	cmtA_c := C.CString(common.ToHex(cmtnew[:]))
 	sn_old_c := C.CString(common.ToHex(snaold.Bytes()[:]))
 	value_s_c := C.ulong(value)
-	t1 := time.Now()
+
 	tf := C.verifyRedeemproof(cproof, cmtA_old_c, sn_old_c, cmtA_c, value_s_c)
-	t2 := time.Now()
-	veriftRedeemproof_time := t2.Sub(t1)
-	log.Info("---------------------------------veriftRedeemproof_time---------------------------------")
-	log.Info(fmt.Sprintf("veriftRedeemproof_time = %v ", veriftRedeemproof_time))
+
 	if tf == false {
 		return InvalidRedeemProof
 	}
@@ -375,6 +377,7 @@ func VerifyRedeemProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.
 }
 
 func GenConvertProof(CMTA *common.Hash, ValueA uint64, RA *common.Hash, ValueS uint64, SNS *common.Hash, RS *common.Hash, SNA *common.Hash, CMTS *common.Hash, ValueAnew uint64, SNAnew *common.Hash, RAnew *common.Hash, CMTAnew *common.Hash) []byte {
+
 	cmtA_c := C.CString(common.ToHex(CMTA[:]))
 	valueA_c := C.ulong(ValueA)
 	rA_c := C.CString(common.ToHex(RA.Bytes()[:]))
@@ -387,12 +390,9 @@ func GenConvertProof(CMTA *common.Hash, ValueA uint64, RA *common.Hash, ValueS u
 	snAnew_c := C.CString(common.ToHex(SNAnew.Bytes()[:]))
 	rAnew_c := C.CString(common.ToHex(RAnew.Bytes()[:]))
 	cmtAnew_c := C.CString(common.ToHex(CMTAnew[:]))
-	t1 := time.Now()
+
 	cproof := C.genConvertproof(valueA_c, snS, rS, snA, rA_c, cmtS, cmtA_c, valueS, valueANew_c, snAnew_c, rAnew_c, cmtAnew_c)
-	t2 := time.Now()
-	genConvertproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genConvertproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genConvertproof_time = %v ", genConvertproof_time))
+
 	var goproof string
 	goproof = C.GoString(cproof)
 	return []byte(goproof)
@@ -400,18 +400,23 @@ func GenConvertProof(CMTA *common.Hash, ValueA uint64, RA *common.Hash, ValueS u
 
 var InvalidConvertProof = errors.New("Verifying convert proof failed!!!")
 
-func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAold *common.Hash, cmtAnew *common.Hash) error {
+func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAold *common.Hash, cmtAnew *common.Hash) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	cproof := C.CString(string(proof))
 	snAold_c := C.CString(common.ToHex(sna.Bytes()[:]))
 	cmtS := C.CString(common.ToHex(cmts[:]))
 	cmtAold_c := C.CString(common.ToHex(cmtAold[:]))
 	cmtAnew_c := C.CString(common.ToHex(cmtAnew[:]))
-	t1 := time.Now()
+
 	tf := C.verifyConvertproof(cproof, cmtAold_c, snAold_c, cmtS, cmtAnew_c)
-	t2 := time.Now()
-	verifyConvertproof_time := t2.Sub(t1)
-	log.Info("---------------------------------verifyConvertproof_time---------------------------------")
-	log.Info(fmt.Sprintf("verifyConvertproof_time = %v ", verifyConvertproof_time))
+
 	if tf == false {
 		return InvalidConvertProof
 	}
@@ -419,7 +424,7 @@ func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAo
 }
 
 func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *common.Hash, RC *common.Hash, CMTC *common.Hash, RT []byte, CMTSForMerkle []*common.Hash) []byte {
-	
+
 	valueS := C.ulong(ValueS)
 	snS := C.CString(common.ToHex(SNS.Bytes()[:]))
 	rS := C.CString(common.ToHex(RS.Bytes()[:]))
@@ -435,7 +440,7 @@ func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *comm
 	}
 	cmtsM := C.CString(cmtArray)
 	nC := C.int(len(CMTSForMerkle))
-	fmt.Println("invoke C interface ......")
+
 	cproof := C.genCommitproof(snS, rS, rC, valueS, cmtS, cmtC, cmtsM, nC, rt)
 
 	var goproof string
@@ -445,7 +450,15 @@ func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *comm
 
 var InvalidCommitProof = errors.New("Verifying commit proof failed!!!")
 
-func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []byte) error {
+func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	cproof := C.CString(string(proof))
 	defer C.free(unsafe.Pointer(cproof))
 	cmtC := C.CString(common.ToHex(CMTC[:]))
@@ -454,12 +467,9 @@ func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []
 	defer C.free(unsafe.Pointer(snS))
 	rt := C.CString(common.ToHex(RT))
 	defer C.free(unsafe.Pointer(rt))
-	t1 := time.Now()
+
 	tf := C.verifyCommitproof(cproof, rt, snS, cmtC)
-	t2 := time.Now()
-	verifyCommitproof_time := t2.Sub(t1)
-	log.Info("---------------------------------verifyCommitproof_time---------------------------------")
-	log.Info(fmt.Sprintf("verifyCommitproof_time = %v ", verifyCommitproof_time))
+
 	if tf == false {
 		return InvalidCommitProof
 	}
@@ -477,13 +487,9 @@ func GenClaimProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *commo
 	cmtC := C.CString(common.ToHex(CMTC[:]))
 	cL := C.ulong(L)
 	cN := C.ulong(N)
-	
-	t1 := time.Now()
+
 	cproof := C.genClaimproof(valueS, snS, rS, cmtS, valueC, rC, cmtC, cL, cN)
-	t2 := time.Now()
-	genClaimRefundproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genClaimRefundproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genClaimRefundproof_time = %v ", genClaimRefundproof_time))
+
 	var goproof string
 	goproof = C.GoString(cproof)
 	return []byte(goproof)
@@ -491,7 +497,15 @@ func GenClaimProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *commo
 
 var InvalidClaimProof = errors.New("Verifying claim proof failed!!!")
 
-func VerifyClaimProof(cmts *common.Hash, cmtc *common.Hash, L uint64, N uint64, proof []byte) error {
+func VerifyClaimProof(cmts *common.Hash, cmtc *common.Hash, L uint64, N uint64, proof []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	cproof := C.CString(string(proof))
 	defer C.free(unsafe.Pointer(cproof))
 	cmtS := C.CString(common.ToHex(cmts[:]))
@@ -500,23 +514,20 @@ func VerifyClaimProof(cmts *common.Hash, cmtc *common.Hash, L uint64, N uint64, 
 	defer C.free(unsafe.Pointer(cmtC))
 	cL := C.ulong(L)
 	cN := C.ulong(N)
-	t1 := time.Now()
+
 	tf := C.verifyClaimproof(cproof, cmtS, cmtC, cL, cN)
-	t2 := time.Now()
-	verifyClaimRefundproof_time := t2.Sub(t1)
-	log.Info("---------------------------------verifyClaimRefundproof_time---------------------------------")
-	log.Info(fmt.Sprintf("verifyClaimRefundproof_time = %v ", verifyClaimRefundproof_time))
+
 	if tf == false {
 		return InvalidClaimProof
 	}
 	return nil
 }
 
-func GenDepositsgProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *common.Hash, 
-					ValueB uint64, SNB *common.Hash, RB *common.Hash, CMTB *common.Hash,
-					SNBnew *common.Hash, RBnew *common.Hash, CMTBnew *common.Hash, 
-					RTcmt []byte, CMTSForMerkle []*common.Hash) []byte {
-	
+func GenDepositsgProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *common.Hash,
+	ValueB uint64, SNB *common.Hash, RB *common.Hash, CMTB *common.Hash,
+	SNBnew *common.Hash, RBnew *common.Hash, CMTBnew *common.Hash,
+	RTcmt []byte, CMTSForMerkle []*common.Hash) []byte {
+
 	valueS_c := C.ulong(ValueS)
 	SNS_c := C.CString(common.ToHex(SNS.Bytes()[:])) //--zy
 	RS_c := C.CString(common.ToHex(RS.Bytes()[:]))   //--zy
@@ -539,12 +550,9 @@ func GenDepositsgProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *c
 	}
 	cmtsM := C.CString(cmtArray)
 	nC := C.int(len(CMTSForMerkle))
-	t1 := time.Now()
+
 	cproof := C.genDepositsgproof(valueBNew_c, valueB_c, SNB_c, RB_c, SNBnew_c, RBnew_c, SNS_c, RS_c, cmtB_c, cmtBnew_c, valueS_c, cmtS_c, cmtsM, nC, RT_c)
-	t2 := time.Now()
-	genDepositsgproof_time := t2.Sub(t1)
-	log.Info("---------------------------------genDepositsgproof_time---------------------------------")
-	log.Info(fmt.Sprintf("genDepositsgproof_time = %v ", genDepositsgproof_time))
+
 	var goproof string
 	goproof = C.GoString(cproof)
 	return []byte(goproof)
@@ -552,7 +560,15 @@ func GenDepositsgProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *c
 
 var InvalidDepositsgProof = errors.New("Verifying Deposit_sg proof failed!!!")
 
-func VerifyDepositsgProof(sns *common.Hash, rtcmt common.Hash, cmtb *common.Hash, snb *common.Hash, cmtbnew *common.Hash, proof []byte) error {
+func VerifyDepositsgProof(sns *common.Hash, rtcmt common.Hash, cmtb *common.Hash, snb *common.Hash, cmtbnew *common.Hash, proof []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			pc, _, _, _ := runtime.Caller(1)
+			name := runtime.FuncForPC(pc).Name()
+			err = fmt.Errorf("%s", "Runtime Error: "+name)
+		}
+	}()
+
 	SNS_c := C.CString(common.ToHex(sns.Bytes()[:]))
 	defer C.free(unsafe.Pointer(SNS_c))
 	cproof := C.CString(string(proof))
@@ -565,17 +581,17 @@ func VerifyDepositsgProof(sns *common.Hash, rtcmt common.Hash, cmtb *common.Hash
 	defer C.free(unsafe.Pointer(cmtBnew))
 	SNB_c := C.CString(common.ToHex(snb.Bytes()[:]))
 	defer C.free(unsafe.Pointer(SNB_c))
-	t1 := time.Now()
+
 	tf := C.verifyDepositsgproof(cproof, rtmCmt, SNS_c, cmtB, SNB_c, cmtBnew)
-	t2 := time.Now()
-	verifyDepositsgproof_time := t2.Sub(t1)
-	log.Info("---------------------------------verifyDepositsgproof_time---------------------------------")
-	log.Info(fmt.Sprintf("verifyDepositsgproof_time = %v ", verifyDepositsgproof_time))
+
 	if tf == false {
 		return InvalidDepositsgProof
 	}
 	return nil
 }
+
+//判断交易是否还存在
+var IsTxExist = make(map[common.Hash]bool)
 
 //---------data for test------------------
 

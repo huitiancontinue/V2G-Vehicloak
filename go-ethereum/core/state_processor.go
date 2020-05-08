@@ -104,6 +104,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if tx.Code() == types.MintTx {
 		err = zktx.VerifyMintProof(tx.ZKCMTOLD(), tx.ZKSN(), tx.ZKCMT(), tx.ZKValue(), tx.ZKProof()) //TBD
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}
@@ -111,24 +112,28 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if tx.Code() == types.ConvertTx {
 		err = zktx.VerifyConvertProof(tx.ZKSN(), tx.ZKCMTS(), tx.ZKProof(), tx.ZKCMTOLD(), tx.ZKCMT()) //TBD
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}
 	if tx.Code() == types.CommitTx {
 		err = zktx.VerifyCommitProof(tx.ZKCMT(), tx.ZKSNS(), tx.RTcmt().Bytes(), tx.ZKProof()) //TBD
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}
 	if tx.Code() == types.ClaimTx {
 		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKCMT(), uint64(50), uint64(1000), tx.ZKProof()) //TBD
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}
 	if tx.Code() == types.RefundTx {
 		err = zktx.VerifyClaimProof(tx.ZKCMTS(), tx.ZKCMT(), uint64(950), uint64(1000), tx.ZKProof()) //TBD
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}
@@ -136,6 +141,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if tx.Code() == types.DepositsgTx {
 		err = zktx.VerifyDepositsgProof(tx.ZKSNS(), tx.RTcmt(), tx.ZKCMTOLD(), tx.ZKSN(), tx.ZKCMT(), tx.ZKProof())
 		if err != nil {
+			zktx.IsTxExist[tx.Hash()] = false
 			return nil, 0, err
 		}
 	}

@@ -1511,6 +1511,7 @@ func (s *PublicTransactionPoolAPI) TestBlockByHash(ctx context.Context, hash com
 		}
 	}
 }
+
 //成组交易检测
 func (s *PublicTransactionPoolAPI) TestBlock(ctx context.Context, hashList []common.Hash) {
 	for i := 0; i < len(hashList); i++ {
@@ -1529,10 +1530,15 @@ func (s *PublicTransactionPoolAPI) GetProcessingTime(ctx context.Context, hash c
 			c_end <- t_end
 			return
 		}
+		if zktx.IsTxExist[hash] == false {
+			c_end <- 0
+			return
+		}
 	}
 }
+
 //成组获取共识时间
-func (s *PublicTransactionPoolAPI) GetProcessingTimeAll(ctx context.Context, hashList []common.Hash) ([]int64) {
+func (s *PublicTransactionPoolAPI) GetProcessingTimeAll(ctx context.Context, hashList []common.Hash) []int64 {
 	t_start := time.Now().UnixNano()
 	endChan := make(chan int64, len(hashList))
 	wg := &sync.WaitGroup{}
@@ -1544,7 +1550,7 @@ func (s *PublicTransactionPoolAPI) GetProcessingTimeAll(ctx context.Context, has
 	close(endChan)
 
 	var resultList []int64
-	for r := range endChan{
+	for r := range endChan {
 		resultList = append(resultList, (r-t_start)/1000000)
 	}
 	return resultList
@@ -1636,6 +1642,9 @@ func (s *PublicTransactionPoolAPI) SendMultiTransactions(ctx context.Context, nu
 		}
 	}
 
+	for _, h := range hashList {
+		zktx.IsTxExist[h] = true
+	}
 	timeList := s.GetProcessingTimeAll(ctx, hashList)
 	return timeList, nil
 }
