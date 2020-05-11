@@ -229,16 +229,22 @@ bool verify_convert_proof(r1cs_ppzksnark_verification_key<ppzksnark_ppT> verific
                   uint256 &cmtS,
                   uint256 &cmtA)
 {
-    typedef Fr<ppzksnark_ppT> FieldT;
+    try{
+        typedef Fr<ppzksnark_ppT> FieldT;
 
-    const r1cs_primary_input<FieldT> input = convert_gadget<FieldT>::witness_map(
+        const r1cs_primary_input<FieldT> input = convert_gadget<FieldT>::witness_map(
         cmtA_old,
         sn_old,
         cmtS,
         cmtA);
 
-    // 调用libsnark库中验证proof的函数
-    return r1cs_ppzksnark_verifier_strong_IC<ppzksnark_ppT>(verification_key, input, proof);
+        // 调用libsnark库中验证proof的函数
+        return r1cs_ppzksnark_verifier_strong_IC<ppzksnark_ppT>(verification_key, input, proof);
+
+    }catch(...){
+        return false;
+    }
+    
 }
 
 //func GenCMT(value uint64, sn []byte, r []byte)
@@ -310,131 +316,135 @@ char *genConvertproof(uint64_t value_A,
 
 bool verifyConvertproof(char *data, char *cmtA_old_string, char *sn_old_string, char *cmtS_string ,char *cmtA_new_string)
 {
-    uint256 sn_old = uint256S(sn_old_string);
-    uint256 cmtS = uint256S(cmtS_string);
-    uint256 cmtA_old = uint256S(cmtA_old_string);
-    uint256 cmtA_new = uint256S(cmtA_new_string);
+    try{
+        uint256 sn_old = uint256S(sn_old_string);
+        uint256 cmtS = uint256S(cmtS_string);
+        uint256 cmtA_old = uint256S(cmtA_old_string);
+        uint256 cmtA_new = uint256S(cmtA_new_string);
 
-    alt_bn128_pp::init_public_params();
-    r1cs_ppzksnark_keypair<alt_bn128_pp> keypair;
-    keypair.vk = deserializevkFromFile("/usr/local/prfKey/convertvk.txt");
+        alt_bn128_pp::init_public_params();
+        r1cs_ppzksnark_keypair<alt_bn128_pp> keypair;
+        keypair.vk = deserializevkFromFile("/usr/local/prfKey/convertvk.txt");
 
-    libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_pp> proof;
-    
-    uint8_t A_g_x[64];
-    uint8_t A_g_y[64];
-    uint8_t A_h_x[64];
-    uint8_t A_h_y[64];
-    uint8_t B_g_x_1[64];
-    uint8_t B_g_x_0[64];
-    uint8_t B_g_y_1[64];
-    uint8_t B_g_y_0[64];
-    uint8_t B_h_x[64];
-    uint8_t B_h_y[64];
-    uint8_t C_g_x[64];
-    uint8_t C_g_y[64];
-    uint8_t C_h_x[64];
-    uint8_t C_h_y[64];
-    uint8_t H_x[64];
-    uint8_t H_y[64];
-    uint8_t K_x[64];
-    uint8_t K_y[64];
+        libsnark::r1cs_ppzksnark_proof<libff::alt_bn128_pp> proof;
+        
+        uint8_t A_g_x[64];
+        uint8_t A_g_y[64];
+        uint8_t A_h_x[64];
+        uint8_t A_h_y[64];
+        uint8_t B_g_x_1[64];
+        uint8_t B_g_x_0[64];
+        uint8_t B_g_y_1[64];
+        uint8_t B_g_y_0[64];
+        uint8_t B_h_x[64];
+        uint8_t B_h_y[64];
+        uint8_t C_g_x[64];
+        uint8_t C_g_y[64];
+        uint8_t C_h_x[64];
+        uint8_t C_h_y[64];
+        uint8_t H_x[64];
+        uint8_t H_y[64];
+        uint8_t K_x[64];
+        uint8_t K_y[64];
 
-    for (int i = 0; i < 64; i++)
-    {
-        A_g_x[i] = uint8_t(data[i + 0]);
-        A_g_y[i] = uint8_t(data[i + 64]);
-        A_h_x[i] = uint8_t(data[i + 128]);
-        A_h_y[i] = uint8_t(data[i + 192]);
-        B_g_x_1[i] = uint8_t(data[i + 256]);
-        B_g_x_0[i] = uint8_t(data[i + 320]);
-        B_g_y_1[i] = uint8_t(data[i + 384]);
-        B_g_y_0[i] = uint8_t(data[i + 448]);
-        B_h_x[i] = uint8_t(data[i + 512]);
-        B_h_y[i] = uint8_t(data[i + 576]);
-        C_g_x[i] = uint8_t(data[i + 640]);
-        C_g_y[i] = uint8_t(data[i + 704]);
-        C_h_x[i] = uint8_t(data[i + 768]);
-        C_h_y[i] = uint8_t(data[i + 832]);
-        H_x[i] = uint8_t(data[i + 896]);
-        H_y[i] = uint8_t(data[i + 960]);
-        K_x[i] = uint8_t(data[i + 1024]);
-        K_y[i] = uint8_t(data[i + 1088]);
+        for (int i = 0; i < 64; i++)
+        {
+            A_g_x[i] = uint8_t(data[i + 0]);
+            A_g_y[i] = uint8_t(data[i + 64]);
+            A_h_x[i] = uint8_t(data[i + 128]);
+            A_h_y[i] = uint8_t(data[i + 192]);
+            B_g_x_1[i] = uint8_t(data[i + 256]);
+            B_g_x_0[i] = uint8_t(data[i + 320]);
+            B_g_y_1[i] = uint8_t(data[i + 384]);
+            B_g_y_0[i] = uint8_t(data[i + 448]);
+            B_h_x[i] = uint8_t(data[i + 512]);
+            B_h_y[i] = uint8_t(data[i + 576]);
+            C_g_x[i] = uint8_t(data[i + 640]);
+            C_g_y[i] = uint8_t(data[i + 704]);
+            C_h_x[i] = uint8_t(data[i + 768]);
+            C_h_y[i] = uint8_t(data[i + 832]);
+            H_x[i] = uint8_t(data[i + 896]);
+            H_y[i] = uint8_t(data[i + 960]);
+            K_x[i] = uint8_t(data[i + 1024]);
+            K_y[i] = uint8_t(data[i + 1088]);
+        }
+
+        for (int i = 0, j = 0; i < 64; i += 2, j++)
+        {
+            A_g_x[j] = uint8_t(convertFromAscii(A_g_x[i]) * 16 + convertFromAscii(A_g_x[i + 1]));
+            A_g_y[j] = uint8_t(convertFromAscii(A_g_y[i]) * 16 + convertFromAscii(A_g_y[i + 1]));
+            A_h_x[j] = uint8_t(convertFromAscii(A_h_x[i]) * 16 + convertFromAscii(A_h_x[i + 1]));
+            A_h_y[j] = uint8_t(convertFromAscii(A_h_y[i]) * 16 + convertFromAscii(A_h_y[i + 1]));
+            B_g_x_1[j] = uint8_t(convertFromAscii(B_g_x_1[i]) * 16 + convertFromAscii(B_g_x_1[i + 1]));
+            B_g_x_0[j] = uint8_t(convertFromAscii(B_g_x_0[i]) * 16 + convertFromAscii(B_g_x_0[i + 1]));
+            B_g_y_1[j] = uint8_t(convertFromAscii(B_g_y_1[i]) * 16 + convertFromAscii(B_g_y_1[i + 1]));
+            B_g_y_0[j] = uint8_t(convertFromAscii(B_g_y_0[i]) * 16 + convertFromAscii(B_g_y_0[i + 1]));
+            B_h_x[j] = uint8_t(convertFromAscii(B_h_x[i]) * 16 + convertFromAscii(B_h_x[i + 1]));
+            B_h_y[j] = uint8_t(convertFromAscii(B_h_y[i]) * 16 + convertFromAscii(B_h_y[i + 1]));
+            C_g_x[j] = uint8_t(convertFromAscii(C_g_x[i]) * 16 + convertFromAscii(C_g_x[i + 1]));
+            C_g_y[j] = uint8_t(convertFromAscii(C_g_y[i]) * 16 + convertFromAscii(C_g_y[i + 1]));
+            C_h_x[j] = uint8_t(convertFromAscii(C_h_x[i]) * 16 + convertFromAscii(C_h_x[i + 1]));
+            C_h_y[j] = uint8_t(convertFromAscii(C_h_y[i]) * 16 + convertFromAscii(C_h_y[i + 1]));
+            H_x[j] = uint8_t(convertFromAscii(H_x[i]) * 16 + convertFromAscii(H_x[i + 1]));
+            H_y[j] = uint8_t(convertFromAscii(H_y[i]) * 16 + convertFromAscii(H_y[i + 1]));
+            K_x[j] = uint8_t(convertFromAscii(K_x[i]) * 16 + convertFromAscii(K_x[i + 1]));
+            K_y[j] = uint8_t(convertFromAscii(K_y[i]) * 16 + convertFromAscii(K_y[i + 1]));
+        }
+
+        libff::bigint<libff::alt_bn128_r_limbs> a_g_x = libsnarkBigintFromBytes(A_g_x);
+        libff::bigint<libff::alt_bn128_r_limbs> a_g_y = libsnarkBigintFromBytes(A_g_y);
+        libff::bigint<libff::alt_bn128_r_limbs> a_h_x = libsnarkBigintFromBytes(A_h_x);
+        libff::bigint<libff::alt_bn128_r_limbs> a_h_y = libsnarkBigintFromBytes(A_h_y);
+        libff::bigint<libff::alt_bn128_r_limbs> b_g_x_1 = libsnarkBigintFromBytes(B_g_x_1);
+        libff::bigint<libff::alt_bn128_r_limbs> b_g_x_0 = libsnarkBigintFromBytes(B_g_x_0);
+        libff::bigint<libff::alt_bn128_r_limbs> b_g_y_1 = libsnarkBigintFromBytes(B_g_y_1);
+        libff::bigint<libff::alt_bn128_r_limbs> b_g_y_0 = libsnarkBigintFromBytes(B_g_y_0);
+
+        libff::bigint<libff::alt_bn128_r_limbs> b_h_x = libsnarkBigintFromBytes(B_h_x);
+        libff::bigint<libff::alt_bn128_r_limbs> b_h_y = libsnarkBigintFromBytes(B_h_y);
+        libff::bigint<libff::alt_bn128_r_limbs> c_g_x = libsnarkBigintFromBytes(C_g_x);
+        libff::bigint<libff::alt_bn128_r_limbs> c_g_y = libsnarkBigintFromBytes(C_g_y);
+        libff::bigint<libff::alt_bn128_r_limbs> c_h_x = libsnarkBigintFromBytes(C_h_x);
+        libff::bigint<libff::alt_bn128_r_limbs> c_h_y = libsnarkBigintFromBytes(C_h_y);
+        libff::bigint<libff::alt_bn128_r_limbs> h_x = libsnarkBigintFromBytes(H_x);
+        libff::bigint<libff::alt_bn128_r_limbs> h_y = libsnarkBigintFromBytes(H_y);
+        libff::bigint<libff::alt_bn128_r_limbs> k_x = libsnarkBigintFromBytes(K_x);
+        libff::bigint<libff::alt_bn128_r_limbs> k_y = libsnarkBigintFromBytes(K_y);
+
+        //ecc element
+        proof.g_A.g.X = a_g_x;
+        proof.g_A.g.Y = a_g_y;
+        proof.g_A.h.X = a_h_x;
+        proof.g_A.h.Y = a_h_y;
+        proof.g_B.g.X.c1 = b_g_x_1;
+        proof.g_B.g.X.c0 = b_g_x_0;
+        proof.g_B.g.Y.c1 = b_g_y_1;
+        proof.g_B.g.Y.c0 = b_g_y_0;
+        proof.g_B.h.X = b_h_x;
+        proof.g_B.h.Y = b_h_y;
+        proof.g_C.g.X = c_g_x;
+        proof.g_C.g.Y = c_g_y;
+        proof.g_C.h.X = c_h_x;
+        proof.g_C.h.Y = c_h_y;
+        proof.g_H.X = h_x;
+        proof.g_H.Y = h_y;
+        proof.g_K.X = k_x;
+        proof.g_K.Y = k_y;
+
+        bool result = verify_convert_proof(keypair.vk, proof, cmtA_old,sn_old, cmtS , cmtA_new);
+
+        if (!result)
+        {
+            cout << "Verifying convert proof unsuccessfully!!!" << endl;
+        }
+        else
+        {
+            cout << "Verifying convert proof successfully!!!" << endl;
+        }
+
+        return result;
+    }catch(...){
+        return false;
     }
-
-    for (int i = 0, j = 0; i < 64; i += 2, j++)
-    {
-        A_g_x[j] = uint8_t(convertFromAscii(A_g_x[i]) * 16 + convertFromAscii(A_g_x[i + 1]));
-        A_g_y[j] = uint8_t(convertFromAscii(A_g_y[i]) * 16 + convertFromAscii(A_g_y[i + 1]));
-        A_h_x[j] = uint8_t(convertFromAscii(A_h_x[i]) * 16 + convertFromAscii(A_h_x[i + 1]));
-        A_h_y[j] = uint8_t(convertFromAscii(A_h_y[i]) * 16 + convertFromAscii(A_h_y[i + 1]));
-        B_g_x_1[j] = uint8_t(convertFromAscii(B_g_x_1[i]) * 16 + convertFromAscii(B_g_x_1[i + 1]));
-        B_g_x_0[j] = uint8_t(convertFromAscii(B_g_x_0[i]) * 16 + convertFromAscii(B_g_x_0[i + 1]));
-        B_g_y_1[j] = uint8_t(convertFromAscii(B_g_y_1[i]) * 16 + convertFromAscii(B_g_y_1[i + 1]));
-        B_g_y_0[j] = uint8_t(convertFromAscii(B_g_y_0[i]) * 16 + convertFromAscii(B_g_y_0[i + 1]));
-        B_h_x[j] = uint8_t(convertFromAscii(B_h_x[i]) * 16 + convertFromAscii(B_h_x[i + 1]));
-        B_h_y[j] = uint8_t(convertFromAscii(B_h_y[i]) * 16 + convertFromAscii(B_h_y[i + 1]));
-        C_g_x[j] = uint8_t(convertFromAscii(C_g_x[i]) * 16 + convertFromAscii(C_g_x[i + 1]));
-        C_g_y[j] = uint8_t(convertFromAscii(C_g_y[i]) * 16 + convertFromAscii(C_g_y[i + 1]));
-        C_h_x[j] = uint8_t(convertFromAscii(C_h_x[i]) * 16 + convertFromAscii(C_h_x[i + 1]));
-        C_h_y[j] = uint8_t(convertFromAscii(C_h_y[i]) * 16 + convertFromAscii(C_h_y[i + 1]));
-        H_x[j] = uint8_t(convertFromAscii(H_x[i]) * 16 + convertFromAscii(H_x[i + 1]));
-        H_y[j] = uint8_t(convertFromAscii(H_y[i]) * 16 + convertFromAscii(H_y[i + 1]));
-        K_x[j] = uint8_t(convertFromAscii(K_x[i]) * 16 + convertFromAscii(K_x[i + 1]));
-        K_y[j] = uint8_t(convertFromAscii(K_y[i]) * 16 + convertFromAscii(K_y[i + 1]));
-    }
-
-    libff::bigint<libff::alt_bn128_r_limbs> a_g_x = libsnarkBigintFromBytes(A_g_x);
-    libff::bigint<libff::alt_bn128_r_limbs> a_g_y = libsnarkBigintFromBytes(A_g_y);
-    libff::bigint<libff::alt_bn128_r_limbs> a_h_x = libsnarkBigintFromBytes(A_h_x);
-    libff::bigint<libff::alt_bn128_r_limbs> a_h_y = libsnarkBigintFromBytes(A_h_y);
-    libff::bigint<libff::alt_bn128_r_limbs> b_g_x_1 = libsnarkBigintFromBytes(B_g_x_1);
-    libff::bigint<libff::alt_bn128_r_limbs> b_g_x_0 = libsnarkBigintFromBytes(B_g_x_0);
-    libff::bigint<libff::alt_bn128_r_limbs> b_g_y_1 = libsnarkBigintFromBytes(B_g_y_1);
-    libff::bigint<libff::alt_bn128_r_limbs> b_g_y_0 = libsnarkBigintFromBytes(B_g_y_0);
-
-    libff::bigint<libff::alt_bn128_r_limbs> b_h_x = libsnarkBigintFromBytes(B_h_x);
-    libff::bigint<libff::alt_bn128_r_limbs> b_h_y = libsnarkBigintFromBytes(B_h_y);
-    libff::bigint<libff::alt_bn128_r_limbs> c_g_x = libsnarkBigintFromBytes(C_g_x);
-    libff::bigint<libff::alt_bn128_r_limbs> c_g_y = libsnarkBigintFromBytes(C_g_y);
-    libff::bigint<libff::alt_bn128_r_limbs> c_h_x = libsnarkBigintFromBytes(C_h_x);
-    libff::bigint<libff::alt_bn128_r_limbs> c_h_y = libsnarkBigintFromBytes(C_h_y);
-    libff::bigint<libff::alt_bn128_r_limbs> h_x = libsnarkBigintFromBytes(H_x);
-    libff::bigint<libff::alt_bn128_r_limbs> h_y = libsnarkBigintFromBytes(H_y);
-    libff::bigint<libff::alt_bn128_r_limbs> k_x = libsnarkBigintFromBytes(K_x);
-    libff::bigint<libff::alt_bn128_r_limbs> k_y = libsnarkBigintFromBytes(K_y);
-
-    //ecc element
-    proof.g_A.g.X = a_g_x;
-    proof.g_A.g.Y = a_g_y;
-    proof.g_A.h.X = a_h_x;
-    proof.g_A.h.Y = a_h_y;
-    proof.g_B.g.X.c1 = b_g_x_1;
-    proof.g_B.g.X.c0 = b_g_x_0;
-    proof.g_B.g.Y.c1 = b_g_y_1;
-    proof.g_B.g.Y.c0 = b_g_y_0;
-    proof.g_B.h.X = b_h_x;
-    proof.g_B.h.Y = b_h_y;
-    proof.g_C.g.X = c_g_x;
-    proof.g_C.g.Y = c_g_y;
-    proof.g_C.h.X = c_h_x;
-    proof.g_C.h.Y = c_h_y;
-    proof.g_H.X = h_x;
-    proof.g_H.Y = h_y;
-    proof.g_K.X = k_x;
-    proof.g_K.Y = k_y;
-
-    bool result = verify_convert_proof(keypair.vk, proof, cmtA_old,sn_old, cmtS , cmtA_new);
-
-    if (!result)
-    {
-        cout << "Verifying convert proof unsuccessfully!!!" << endl;
-    }
-    else
-    {
-        cout << "Verifying convert proof successfully!!!" << endl;
-    }
-
-    return result;
 }
 

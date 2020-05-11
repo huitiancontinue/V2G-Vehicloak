@@ -25,7 +25,6 @@ import (
 	"io"
 	"math/big"
 	"os"
-	"runtime"
 	"sync"
 	"unsafe"
 
@@ -306,19 +305,16 @@ func GenMintProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RAne
 
 var InvalidMintProof = errors.New("Verifying mint proof failed!!!")
 
-func VerifyMintProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyMintProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) error {
 
 	cproof := C.CString(string(proof))
+	defer C.free(unsafe.Pointer(cproof))
 	cmtA_old_c := C.CString(common.ToHex(cmtold[:]))
+	defer C.free(unsafe.Pointer(cmtA_old_c))
 	cmtA_c := C.CString(common.ToHex(cmtnew[:]))
+	defer C.free(unsafe.Pointer(cmtA_c))
 	sn_old_c := C.CString(common.ToHex(snaold.Bytes()[:]))
+	defer C.free(unsafe.Pointer(sn_old_c))
 	value_s_c := C.ulong(value)
 
 	tf := C.verifyMintproof(cproof, cmtA_old_c, sn_old_c, cmtA_c, value_s_c)
@@ -353,14 +349,7 @@ func GenRedeemProof(ValueOld uint64, RAold *common.Hash, SNAnew *common.Hash, RA
 
 var InvalidRedeemProof = errors.New("Verifying redeem proof failed!!!")
 
-func VerifyRedeemProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyRedeemProof(cmtold *common.Hash, snaold *common.Hash, cmtnew *common.Hash, value uint64, proof []byte) error {
 
 	cproof := C.CString(string(proof))
 	cmtA_old_c := C.CString(common.ToHex(cmtold[:]))
@@ -400,14 +389,7 @@ func GenConvertProof(CMTA *common.Hash, ValueA uint64, RA *common.Hash, ValueS u
 
 var InvalidConvertProof = errors.New("Verifying convert proof failed!!!")
 
-func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAold *common.Hash, cmtAnew *common.Hash) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyConvertProof(sna *common.Hash, cmts *common.Hash, proof []byte, cmtAold *common.Hash, cmtAnew *common.Hash) error {
 
 	cproof := C.CString(string(proof))
 	snAold_c := C.CString(common.ToHex(sna.Bytes()[:]))
@@ -450,14 +432,7 @@ func GenCommitProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *comm
 
 var InvalidCommitProof = errors.New("Verifying commit proof failed!!!")
 
-func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []byte) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyCommitProof(CMTC *common.Hash, SN_S *common.Hash, RT []byte, proof []byte) error {
 
 	cproof := C.CString(string(proof))
 	defer C.free(unsafe.Pointer(cproof))
@@ -497,14 +472,7 @@ func GenClaimProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *commo
 
 var InvalidClaimProof = errors.New("Verifying claim proof failed!!!")
 
-func VerifyClaimProof(cmts *common.Hash, cmtc *common.Hash, L uint64, N uint64, proof []byte) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyClaimProof(cmts *common.Hash, cmtc *common.Hash, L uint64, N uint64, proof []byte) error {
 
 	cproof := C.CString(string(proof))
 	defer C.free(unsafe.Pointer(cproof))
@@ -560,14 +528,7 @@ func GenDepositsgProof(ValueS uint64, SNS *common.Hash, RS *common.Hash, CMTS *c
 
 var InvalidDepositsgProof = errors.New("Verifying Deposit_sg proof failed!!!")
 
-func VerifyDepositsgProof(sns *common.Hash, rtcmt common.Hash, cmtb *common.Hash, snb *common.Hash, cmtbnew *common.Hash, proof []byte) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			pc, _, _, _ := runtime.Caller(1)
-			name := runtime.FuncForPC(pc).Name()
-			err = fmt.Errorf("%s", "Runtime Error: "+name)
-		}
-	}()
+func VerifyDepositsgProof(sns *common.Hash, rtcmt common.Hash, cmtb *common.Hash, snb *common.Hash, cmtbnew *common.Hash, proof []byte) error {
 
 	SNS_c := C.CString(common.ToHex(sns.Bytes()[:]))
 	defer C.free(unsafe.Pointer(SNS_c))

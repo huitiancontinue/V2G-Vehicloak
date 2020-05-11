@@ -15,11 +15,11 @@ include_directories(
 #   mint/mintcgo.cpp
 # )
 
-# add_library(
-#   zk_convert
-#   SHARED
-#   convert/convertcgo.cpp
-# )
+add_library(
+  zk_convert
+  SHARED
+  convert/convertcgo.cpp
+)
 
 # add_library(
 #   zk_commit
@@ -225,19 +225,19 @@ include_directories(
 #  )
 ##############################
 # add_executable(
-#   main
+#   test
 
-#   claim/main.cpp
+#   convert/test.cpp
 # )
 
 # target_link_libraries(
-#   main
+#   test
 
 #   snark
 # )
 
 # target_include_directories(
-#   main
+#   test
 
 #   PUBLIC
 #   ${DEPENDS_DIR}/libsnark

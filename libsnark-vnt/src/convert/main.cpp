@@ -23,7 +23,7 @@ using namespace std;
 template<typename ppzksnark_ppT>
 boost::optional<r1cs_ppzksnark_proof<ppzksnark_ppT>> generate_convert_proof(r1cs_ppzksnark_proving_key<ppzksnark_ppT> proving_key,
                                                                     const Note& note_old,
-                                                                    const NoteS& notes,
+                                                                    const Note& notes,
                                                                     const Note& note,
                                                                     uint256 cmtA_old,
                                                                     uint256 cmtS,
@@ -123,7 +123,7 @@ bool test_convert_gadget_with_instance(
     //uint160 pk = uint160S("123");
     uint256 sn_s = uint256S("123");//random_uint256();
     uint256 r_s = uint256S("123");//random_uint256();
-    NoteS notes = NoteS(value_s, sn_s, r_s, sn_old);
+    Note notes = Note(value_s, sn_s, r_s);
     uint256 cmtS = notes.cm();
 
     //printf("value_old+value_s = %zu\n", value_old+value_s);
